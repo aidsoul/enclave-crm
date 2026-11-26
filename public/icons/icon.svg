@@ -1,0 +1,138 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <defs>
+    <!-- Background Gradient -->
+    <radialGradient id="bgGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#14213d" stop-opacity="0.6" />
+      <stop offset="100%" stop-color="#090d16" stop-opacity="1" />
+    </radialGradient>
+
+    <!-- Neon Glow Filters -->
+    <filter id="coreGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="8" result="blur1" />
+      <feGaussianBlur stdDeviation="18" result="blur2" />
+      <feMerge>
+        <feMergeNode in="blur2" />
+        <feMergeNode in="blur1" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+
+    <filter id="softGlow" x="-20%" y="-20%" width="140%" height="140%">
+      <feGaussianBlur stdDeviation="4" result="blur" />
+      <feMerge>
+        <feMergeNode in="blur" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+
+    <!-- Gradients for Faces -->
+    <!-- Top Face (TMA Dark Graphite) -->
+    <linearGradient id="topFace" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#182234" />
+      <stop offset="100%" stop-color="#24344d" />
+    </linearGradient>
+
+    <!-- Left Face -->
+    <linearGradient id="leftFace" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#111827" />
+      <stop offset="100%" stop-color="#0b0f19" />
+    </linearGradient>
+
+    <!-- Right Face -->
+    <linearGradient id="rightFace" x1="100%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#1a2436" />
+      <stop offset="100%" stop-color="#0e1420" />
+    </linearGradient>
+
+    <!-- Neon Line Gradients -->
+    <linearGradient id="blueGlowLinear" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#06b6d4" />
+      <stop offset="100%" stop-color="#2563eb" />
+    </linearGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="512" height="512" rx="112" fill="#090d16" />
+  <rect width="512" height="512" rx="112" fill="url(#bgGlow)" />
+
+  <!-- Background Ambient Glow behind Cube -->
+  <ellipse cx="256" cy="265" rx="130" ry="80" fill="#06b6d4" opacity="0.12" filter="url(#coreGlow)" />
+
+  <!-- ================= BASE ISOMETRIC CUBE ================= -->
+  <!-- Center is at (256, 256). Projection: dx = 150*cos(30°) ≈ 130, dy = 150*sin(30°) = 75 -->
+  <!-- Top vertices: Center(256,220), Top(256,120), Right(376,190), Left(136,190) -->
+  <!-- Bottom vertices: Center(256,360), Right(376,330), Left(136,330) -->
+
+  <g id="cube-body">
+    <!-- Left Face -->
+    <polygon points="136,190 256,260 256,400 136,330" fill="url(#leftFace)" stroke="#1e293b" stroke-width="2" />
+
+    <!-- Right Face -->
+    <polygon points="256,260 376,190 376,330 256,400" fill="url(#rightFace)" stroke="#1e293b" stroke-width="2" />
+
+    <!-- Top Face (Enclave Cap) -->
+    <polygon points="256,120 376,190 256,260 136,190" fill="url(#topFace)" stroke="#334155" stroke-width="2" />
+  </g>
+
+  <!-- ================= TOP FACE: ENCLAVE SYMBOL ================= -->
+  <!-- Transform to Top Isometric Plane: rotate(30) skewX(-30) scale(1, 0.577) approx -->
+  <g transform="translate(256, 190) scale(1, 0.577) rotate(45)">
+    <!-- Inner Cyber Plate -->
+    <rect x="-64" y="-64" width="128" height="128" rx="16" fill="#0f172a" stroke="#06b6d4" stroke-width="2.5" opacity="0.9" filter="url(#softGlow)" />
+
+    <!-- Outer Radiation Ring Accent -->
+    <circle cx="0" cy="0" r="48" fill="none" stroke="#2563eb" stroke-width="2" stroke-dasharray="8 6" opacity="0.7" />
+
+    <!-- Enclave Fan Blades (3 Sectors, 60 deg each, separated by 60 deg) -->
+    <!-- Blade 1 (Top / -90 deg) -->
+    <path d="M 0,0 L -18,-32 A 38,38 0 0,1 18,-32 Z" fill="url(#blueGlowLinear)" filter="url(#softGlow)" />
+    <!-- Blade 2 (Bottom Right / 30 deg) -->
+    <path d="M 0,0 L 37,3 A 38,38 0 0,1 19,34 Z" fill="url(#blueGlowLinear)" filter="url(#softGlow)" />
+    <!-- Blade 3 (Bottom Left / 150 deg) -->
+    <path d="M 0,0 L -19,34 A 38,38 0 0,1 -37,3 Z" fill="url(#blueGlowLinear)" filter="url(#softGlow)" />
+
+    <!-- Center Core Mask / Center Dots -->
+    <circle cx="0" cy="0" r="11" fill="#0f172a" />
+    <circle cx="0" cy="0" r="7" fill="#06b6d4" filter="url(#coreGlow)" />
+  </g>
+
+  <!-- ================= SIDES: TECH SEAMS & ENERGETIC LIGHTS ================= -->
+  <!-- Left Face Tech Details -->
+  <!-- Cyber Plate on Left -->
+  <polygon points="152,210 240,261 240,373 152,322" fill="#0c1322" stroke="#1e293b" stroke-width="1.5" />
+
+  <!-- Vertical Core Power Seam (Left) -->
+  <path d="M 196,242 L 196,340" stroke="url(#blueGlowLinear)" stroke-width="3.5" stroke-linecap="round" filter="url(#softGlow)" />
+  <path d="M 196,260 L 196,320" stroke="#ffffff" stroke-width="1.2" stroke-linecap="round" />
+
+  <!-- Left Warning Hazard Strip (Amber) -->
+  <g filter="url(#softGlow)">
+    <line x1="164" y1="230" x2="164" y2="242" stroke="#f59e0b" stroke-width="3" stroke-linecap="round" />
+    <line x1="172" y1="234.5" x2="172" y2="246.5" stroke="#f59e0b" stroke-width="3" stroke-linecap="round" />
+    <line x1="180" y1="239" x2="180" y2="251" stroke="#f59e0b" stroke-width="3" stroke-linecap="round" />
+  </g>
+
+  <!-- Right Face Tech Details -->
+  <!-- Cyber Plate on Right -->
+  <polygon points="272,261 360,210 360,322 272,373" fill="#131d2e" stroke="#25354e" stroke-width="1.5" />
+
+  <!-- Vertical Core Power Seam (Right) -->
+  <path d="M 316,242 L 316,340" stroke="url(#blueGlowLinear)" stroke-width="3.5" stroke-linecap="round" filter="url(#softGlow)" />
+  <path d="M 316,260 L 316,320" stroke="#ffffff" stroke-width="1.2" stroke-linecap="round" />
+
+  <!-- Right Status LED Indicator Bar (Panic Red Accent) -->
+  <g filter="url(#softGlow)">
+    <circle cx="342" cy="235" r="2.5" fill="#ef4444" />
+    <circle cx="342" cy="245" r="2.5" fill="#ef4444" opacity="0.4" />
+    <circle cx="342" cy="255" r="2.5" fill="#ef4444" opacity="0.4" />
+  </g>
+
+  <!-- Central Edge Neon Pulse (Where both sides meet) -->
+  <line x1="256" y1="262" x2="256" y2="398" stroke="#06b6d4" stroke-width="2.5" opacity="0.85" filter="url(#softGlow)" />
+
+  <!-- Outer Isometric Cube Corner Highlights -->
+  <circle cx="256" cy="120" r="3" fill="#38bdf8" filter="url(#softGlow)" />
+  <circle cx="136" cy="190" r="2.5" fill="#38bdf8" />
+  <circle cx="376" cy="190" r="2.5" fill="#38bdf8" />
+  <circle cx="256" cy="400" r="3" fill="#38bdf8" filter="url(#softGlow)" />
+</svg>

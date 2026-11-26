@@ -1,0 +1,376 @@
+@extends('tma.layout')
+
+@section('content')
+<div class="flex items-center justify-between mb-6">
+  <div>
+    <p class="text-fg-subtle text-xs">Менеджер</p>
+    <h1 class="font-display font-bold text-xl" x-text="user?.system_name || '{{ $user?->system_name ?? 'Менеджер' }}'">{{ $user?->system_name ?? 'Менеджер' }}</h1>
+  </div>
+  <div class="flex items-center gap-2">
+    @if(!$user || !$user->isCourier())
+    <button type="button"
+            @click="toggleSelectionMode()"
+            class="px-3 py-2 rounded-xl text-xs font-semibold flex items-center gap-1.5 transition-colors"
+            :class="selectionMode ? 'bg-primary text-primary-fg shadow-sm' : 'bg-surface2 text-fg-muted hover:text-fg'">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+      </svg>
+      <span x-text="selectionMode ? 'Готово' : 'Выбрать'"></span>
+    </button>
+    <a href="/tma/new" class="w-10 h-10 rounded-full bg-primary flex items-center justify-center shadow-sm active:scale-95 transition-transform">
+      <svg class="w-5 h-5 text-primary-fg" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4.5v15m7.5-7.5h-15"/>
+      </svg>
+    </a>
+    @endif
+  </div>
+</div>
+
+<div class="mb-4">
+  <div class="relative">
+    <svg class="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-fg-muted" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+      <path stroke-linecap="round" stroke-linejoin="round" d="m21 21-5.197-5.197m0 0A7.5 7.5 0 1 0 5.196 5.196a7.5 7.5 0 0 0 10.607 10.607Z"/>
+    </svg>
+    <input
+      type="text"
+      x-model="orderSearch"
+      @input="onOrderSearch()"
+      placeholder="Поиск..."
+      class="w-full pl-10 pr-4 py-2.5 bg-surface2 rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-primary/50 transition"
+    >
+  </div>
+</div>
+
+<div class="flex gap-2 mb-4 overflow-x-auto pb-2">
+  @if($user && $user->isCourier())
+    <button @click="setFilter('')" class="px-3 py-1.5 text-xs font-medium rounded-lg whitespace-nowrap transition-colors"
+            :class="filter === '' ? 'bg-primary/15 text-primary' : 'bg-surface2 text-fg-subtle hover:text-fg-muted'">Все</button>
+    <button @click="setFilter('assigned')" class="px-3 py-1.5 text-xs font-medium rounded-lg whitespace-nowrap transition-colors"
+            :class="filter === 'assigned' ? 'bg-primary/15 text-primary' : 'bg-surface2 text-fg-subtle hover:text-fg-muted'">Передан курьеру</button>
+    <button @click="setFilter('at_warehouse')" class="px-3 py-1.5 text-xs font-medium rounded-lg whitespace-nowrap transition-colors"
+            :class="filter === 'at_warehouse' ? 'bg-primary/15 text-primary' : 'bg-surface2 text-fg-subtle hover:text-fg-muted'">В пути</button>
+    <button @click="setFilter('completed')" class="px-3 py-1.5 text-xs font-medium rounded-lg whitespace-nowrap transition-colors"
+            :class="filter === 'completed' ? 'bg-primary/15 text-primary' : 'bg-surface2 text-fg-subtle hover:text-fg-muted'">Доставлен</button>
+    <button @click="setFilter('cancelled')" class="px-3 py-1.5 text-xs font-medium rounded-lg whitespace-nowrap transition-colors"
+            :class="filter === 'cancelled' ? 'bg-primary/15 text-primary' : 'bg-surface2 text-fg-subtle hover:text-fg-muted'">Отменён</button>
+  @else
+    <button @click="setFilter('')" class="px-3 py-1.5 text-xs font-medium rounded-lg whitespace-nowrap transition-colors"
+            :class="filter === '' ? 'bg-primary/15 text-primary' : 'bg-surface2 text-fg-subtle hover:text-fg-muted'">Все</button>
+    <button @click="setFilter('created')" class="px-3 py-1.5 text-xs font-medium rounded-lg whitespace-nowrap transition-colors"
+            :class="filter === 'created' ? 'bg-primary/15 text-primary' : 'bg-surface2 text-fg-subtle hover:text-fg-muted'">Новые</button>
+    <button @click="setFilter('accepted')" class="px-3 py-1.5 text-xs font-medium rounded-lg whitespace-nowrap transition-colors"
+            :class="filter === 'accepted' ? 'bg-primary/15 text-primary' : 'bg-surface2 text-fg-subtle hover:text-fg-muted'">Принятые</button>
+    <button @click="setFilter('assigned')" class="px-3 py-1.5 text-xs font-medium rounded-lg whitespace-nowrap transition-colors"
+            :class="filter === 'assigned' ? 'bg-primary/15 text-primary' : 'bg-surface2 text-fg-subtle hover:text-fg-muted'">Переданы</button>
+    <button @click="setFilter('at_warehouse')" class="px-3 py-1.5 text-xs font-medium rounded-lg whitespace-nowrap transition-colors"
+            :class="filter === 'at_warehouse' ? 'bg-primary/15 text-primary' : 'bg-surface2 text-fg-subtle hover:text-fg-muted'">В пути</button>
+    <button @click="setFilter('completed')" class="px-3 py-1.5 text-xs font-medium rounded-lg whitespace-nowrap transition-colors"
+            :class="filter === 'completed' ? 'bg-primary/15 text-primary' : 'bg-surface2 text-fg-subtle hover:text-fg-muted'">Завершённые</button>
+    <button @click="setFilter('cancelled')" class="px-3 py-1.5 text-xs font-medium rounded-lg whitespace-nowrap transition-colors"
+            :class="filter === 'cancelled' ? 'bg-primary/15 text-primary' : 'bg-surface2 text-fg-subtle hover:text-fg-muted'">Отменённые</button>
+  @endif
+</div>
+
+<div class="flex items-center gap-4 mb-5 px-1 overflow-x-auto pb-1 scrollbar-none">
+  <div class="shrink-0 text-center min-w-[36px]">
+    <p class="text-2xl font-display font-bold text-fg tabular-nums" x-text="statsTotal"></p>
+    <p class="text-[11px] text-fg-subtle mt-0.5">Всего</p>
+  </div>
+  <div class="w-px h-8 bg-white/10 shrink-0"></div>
+  <div class="shrink-0 text-center min-w-[36px]">
+    <p class="text-2xl font-display font-bold text-fg tabular-nums" x-text="statsAccepted"></p>
+    <p class="text-[11px] text-fg-subtle mt-0.5">Принято</p>
+  </div>
+  <div class="w-px h-8 bg-white/10 shrink-0"></div>
+  <div class="shrink-0 text-center min-w-[36px]">
+    <p class="text-2xl font-display font-bold text-fg tabular-nums" x-text="statsAssigned"></p>
+    <p class="text-[11px] text-fg-subtle mt-0.5">Передано</p>
+  </div>
+  <div class="w-px h-8 bg-white/10 shrink-0"></div>
+  <div class="shrink-0 text-center min-w-[36px]">
+    <p class="text-2xl font-display font-bold text-success tabular-nums" x-text="statsCompleted"></p>
+    <p class="text-[11px] text-fg-subtle mt-0.5">Завершено</p>
+  </div>
+  <div class="w-px h-8 bg-white/10 shrink-0"></div>
+  <div class="shrink-0 text-center min-w-[36px]">
+    <p class="text-2xl font-display font-bold text-fg-muted tabular-nums" x-text="statsCancelled"></p>
+    <p class="text-[11px] text-fg-subtle mt-0.5">Отменено</p>
+  </div>
+</div>
+
+<div class="space-y-2 mb-4" id="orders-list">
+  <template x-if="ordersLoading && orders.length === 0">
+    <div class="py-12 flex flex-col items-center justify-center gap-3">
+      <div class="w-8 h-8 rounded-full border-2 border-primary border-t-transparent animate-spin"></div>
+      <p class="text-xs text-fg-muted">Загрузка...</p>
+    </div>
+  </template>
+  <template x-if="!ordersLoading && orders.length === 0">
+    <div class="bg-surface rounded-xl p-8 text-center">
+      <p class="text-fg-subtle text-sm">Нет заказов</p>
+    </div>
+  </template>
+  <template x-for="(order, idx) in orders" :key="order.id">
+    <div class="bg-surface rounded-xl p-4 transition-colors"
+         :class="isOrderSelected(order.id) ? 'bg-primary/[0.06] ring-1 ring-primary/40' : 'active:bg-surface2/60'">
+      <div class="flex items-start gap-3">
+          @if(!$user || !$user->isCourier())
+          <!-- Checkbox when in selection mode or when any orders are selected -->
+          <button type="button"
+                  x-show="selectionMode || selectedOrderIds.length > 0"
+                  @click.stop.prevent="toggleSelectOrder(order.id)"
+                  class="mt-0.5 w-5 h-5 rounded-md flex items-center justify-center shrink-0 transition-colors"
+                  :class="isOrderSelected(order.id) ? 'bg-primary text-primary-fg shadow-sm' : 'bg-surface2 text-transparent'">
+            <svg x-show="isOrderSelected(order.id)" class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2.5" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/>
+            </svg>
+          </button>
+          @endif
+
+          <div class="flex-1 min-w-0">
+            <a :href="'/tma/orders/' + order.id"
+               @dblclick.prevent="window.location.href = '/tma/orders/' + order.id + '?edit=1'"
+               class="block">
+              <div class="flex items-center justify-between mb-1">
+                <div class="flex items-center gap-1.5 flex-wrap">
+                  <span class="text-sm font-medium" x-text="'#' + order.id"></span>
+                  <span x-show="order.external_id" class="text-xs text-fg-subtle font-mono" x-text="'(#' + order.external_id + ')'"></span>
+                  <button type="button"
+                          @click.stop.prevent="window.location.href = '/tma/orders/' + order.id + '/chat'"
+                          class="relative inline-flex items-center gap-1 text-[11px] font-medium text-primary bg-primary/10 px-2 py-0.5 rounded hover:bg-primary/20 transition-colors"
+                          title="Чат по заказу">
+                    <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M8.625 12a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H8.25m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0H12m4.125 0a.375.375 0 1 1-.75 0 .375.375 0 0 1 .75 0Zm0 0h-.375M21 12c0 4.556-4.03 8.25-9 8.25a9.764 9.764 0 0 1-2.555-.337A5.972 5.972 0 0 1 5.41 20.97a.75.75 0 0 1-.755-.783 7.828 7.828 0 0 0 .753-2.008C3.896 16.592 3 14.417 3 12c0-4.556 4.03-8.25 9-8.25s9 3.694 9 8.25Z" />
+                    </svg>
+                    <span>Чат</span>
+                  </button>
+                </div>
+                <span class="text-xs font-medium" :class="getStatusClass(order.status)" x-text="getStatusLabel(order.status)"></span>
+              </div>
+              <div x-show="order.site" class="mb-2">
+                <span class="inline-flex items-center px-2 py-0.5 rounded-md text-[11px] font-medium bg-surface2 text-fg-muted" x-text="formatSite(order.site)"></span>
+              </div>
+              <p class="text-sm font-medium" x-text="order.customer?.name"></p>
+              <p class="text-xs text-fg-muted mb-2" x-text="order.customer?.address"></p>
+              <template x-if="getDeliverySchedule(order)">
+                <div class="flex items-center gap-1.5 text-xs text-primary mb-2 bg-primary/10 px-2 py-0.5 rounded-md w-fit font-medium">
+                  <svg class="w-3.5 h-3.5 shrink-0" fill="none" stroke="currentColor" stroke-width="1.5" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6h4.5m4.5 0a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
+                  </svg>
+                  <span x-text="getDeliverySchedule(order)"></span>
+                </div>
+              </template>
+              <div class="flex items-center justify-between">
+                <span class="text-xs text-fg-subtle" x-text="formatDate(order.created_at)"></span>
+                <span class="text-sm font-display font-bold tabular-nums" x-text="formatPrice(order.total_price)"></span>
+              </div>
+            </a>
+          </div>
+        </div>
+      </div>
+  </template>
+</div>
+
+@if(!$user || !$user->isCourier())
+<!-- Floating Bulk Actions Bar -->
+<div x-show="selectedOrderIds.length > 0"
+     x-transition:enter="transition ease-out duration-200"
+     x-transition:enter-start="opacity-0 translate-y-4"
+     x-transition:enter-end="opacity-100 translate-y-0"
+     x-transition:leave="transition ease-in duration-150"
+     x-transition:leave-start="opacity-100 translate-y-0"
+     x-transition:leave-end="opacity-0 translate-y-4"
+     class="fixed bottom-20 left-4 right-4 z-40 bg-surface/95 backdrop-blur-md border border-primary/30 rounded-2xl p-3 shadow-2xl flex flex-col gap-2 max-w-lg mx-auto">
+  <div class="flex items-center justify-between px-1">
+    <div class="flex items-center gap-2">
+      <span class="w-2 h-2 rounded-full bg-primary animate-pulse"></span>
+      <span class="text-xs font-semibold text-fg">Выбрано: <span class="text-primary font-bold" x-text="selectedOrderIds.length"></span></span>
+    </div>
+    <div class="flex items-center gap-2">
+      <button type="button" @click="toggleSelectAll()" class="text-xs text-primary font-medium hover:underline">
+        <span x-text="(orders.length > 0 && orders.every(o => selectedOrderIds.includes(o.id))) ? 'Снять все' : 'Выбрать все'"></span>
+      </button>
+      <button type="button" @click="clearSelection()" class="text-fg-subtle hover:text-fg text-xs ml-2">Отмена</button>
+    </div>
+  </div>
+  <div class="grid gap-2 pt-1 border-t border-border/50" :class="canCancelSelected ? 'grid-cols-3' : 'grid-cols-2'">
+    <!-- Dynamic action button: based on selectionAction -->
+    <template x-if="selectionAction === 'assign_manager'">
+      <button type="button"
+              @click="openBulkManagerModal()"
+              :disabled="bulkLoading"
+              class="px-3 py-2 bg-primary text-primary-fg rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 active:scale-95 transition-transform shadow-sm disabled:opacity-50">
+        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M15.75 6a3.75 3.75 0 1 1-7.5 0 3.75 3.75 0 0 1 7.5 0ZM4.501 20.118a7.5 7.5 0 0 1 14.998 0A17.933 17.933 0 0 1 12 21.75c-2.676 0-5.216-.584-7.499-1.632Z"/>
+        </svg>
+        <span>Назначить менеджера</span>
+      </button>
+    </template>
+
+    <template x-if="selectionAction === 'accept'">
+      <button type="button"
+              @click="submitBulkAccept()"
+              :disabled="bulkLoading"
+              class="px-3 py-2 bg-success text-white rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 active:scale-95 transition-transform shadow-sm disabled:opacity-50">
+        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/>
+        </svg>
+        <span x-show="!bulkLoading">Принять в работу</span>
+        <span x-show="bulkLoading">Принятие...</span>
+      </button>
+    </template>
+
+    <template x-if="selectionAction === 'assign_courier'">
+      <button type="button"
+              @click="openBulkCourierModal()"
+              class="px-3 py-2 bg-primary text-primary-fg rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 active:scale-95 transition-transform shadow-sm">
+        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 18.75a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 0 1-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 0 0-3.213-9.193 2.056 2.056 0 0 0-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 0 0-10.026 0 1.106 1.106 0 0 0-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12"/>
+        </svg>
+        <span>Назначить курьера</span>
+      </button>
+    </template>
+
+    <button type="button"
+            @click="openBulkWarehouseModal()"
+            class="px-3 py-2 bg-surface2 hover:bg-surface text-fg rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 active:scale-95 transition-transform shadow-sm">
+      <svg class="w-4 h-4 shrink-0 text-primary" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M8.25 18.75a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h6m-9 0H3.375a1.125 1.125 0 0 1-1.125-1.125V14.25m17.25 4.5a1.5 1.5 0 0 1-3 0m3 0a1.5 1.5 0 0 0-3 0m3 0h1.125c.621 0 1.129-.504 1.09-1.124a17.902 17.902 0 0 0-3.213-9.193 2.056 2.056 0 0 0-1.58-.86H14.25M16.5 18.75h-2.25m0-11.177v-.958c0-.568-.422-1.048-.987-1.106a48.554 48.554 0 0 0-10.026 0 1.106 1.106 0 0 0-.987 1.106v7.635m12-6.677v6.677m0 4.5v-4.5m0 0h-12"/>
+      </svg>
+      <span>На склад</span>
+    </button>
+
+    <template x-if="canCancelSelected">
+      <button type="button"
+              @click="openBulkCancelModal()"
+              :disabled="bulkLoading"
+              class="px-3 py-2 bg-error text-white rounded-xl text-xs font-semibold flex items-center justify-center gap-1.5 active:scale-95 transition-transform shadow-sm disabled:opacity-50">
+        <svg class="w-4 h-4 shrink-0" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="m9.75 9.75 4.5 4.5m0-4.5-4.5 4.5M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z"/>
+        </svg>
+        <span x-show="!bulkLoading">Отменить</span>
+        <span x-show="bulkLoading">Отмена...</span>
+      </button>
+    </template>
+  </div>
+</div>
+
+@component('tma.partials.modal', ['show' => 'showBulkManagerModal'])
+  <h3 class="font-display font-bold text-lg mb-2">Назначить менеджера</h3>
+  <p class="text-fg-muted text-sm mb-3">Выберите менеджера для <span class="font-bold text-fg" x-text="selectedOrderIds.length"></span> заказов:</p>
+  <div class="mb-4">
+    <div class="relative" :class="{'z-30': managerDropdownOpen}">
+      <button @click="toggleManagerDropdown()" type="button" class="w-full px-3 py-2.5 bg-surface2 rounded-xl text-sm text-left flex items-center justify-between text-fg">
+        <span x-text="selectedBulkManagerId ? (managers.find(m => m.id === selectedBulkManagerId)?.system_name || 'Выберите менеджера') : 'Выберите менеджера'"></span>
+        <svg class="w-4 h-4 text-fg-muted transition-transform" :class="managerDropdownOpen ? 'rotate-180' : ''" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5"/>
+        </svg>
+      </button>
+      <div x-show="managerDropdownOpen"
+           @click.away="managerDropdownOpen = false"
+           class="absolute z-30 w-full mt-1 bg-surface rounded-xl shadow-xl max-h-60 overflow-hidden">
+        <input type="text"
+               x-model="bulkManagerSearch"
+               @input="searchBulkManagers()"
+               placeholder="Поиск..."
+               class="w-full px-3 py-2 bg-surface2 border-b border-border text-sm text-fg focus:outline-none focus:border-primary"
+               @click.stop>
+        <div class="max-h-40 overflow-y-auto">
+          <template x-for="m in filteredBulkManagers" :key="m.id">
+            <button type="button"
+                    @click="selectedBulkManagerId = m.id; managerDropdownOpen = false"
+                    class="w-full px-3 py-2 text-sm text-left hover:bg-surface2 flex items-center justify-between transition-colors"
+                    :class="selectedBulkManagerId === m.id ? 'bg-surface2 text-primary font-medium' : 'text-fg'">
+              <span x-text="m.system_name"></span>
+              <span x-show="selectedBulkManagerId === m.id" class="text-primary">
+                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/>
+                </svg>
+              </span>
+            </button>
+          </template>
+          <div x-show="!managersLoading && filteredBulkManagers.length === 0" class="px-3 py-2 text-sm text-fg-muted">Ничего не найдено</div>
+          <div x-show="managersLoading" class="px-3 py-2 text-sm text-fg-muted">Загрузка...</div>
+        </div>
+      </div>
+    </div>
+  </div>
+  @component('tma.partials.modal-actions')
+    <button @click="showBulkManagerModal = false" class="flex-1 px-4 py-2.5 bg-surface2 rounded-lg text-sm font-medium">Отмена</button>
+    <button @click="submitBulkAssignManager()" :disabled="bulkLoading || !selectedBulkManagerId" class="flex-1 px-4 py-2.5 bg-primary text-primary-fg rounded-lg text-sm font-medium disabled:opacity-50">
+      <span x-show="!bulkLoading">Назначить</span>
+      <span x-show="bulkLoading">Сохранение...</span>
+    </button>
+  @endcomponent
+@endcomponent
+
+@component('tma.partials.modal', ['show' => 'showBulkCourierModal'])
+  <h3 class="font-display font-bold text-lg mb-2">Назначить курьера</h3>
+  <p class="text-fg-muted text-sm mb-4">Выберите курьера для <span class="font-bold text-fg" x-text="selectedOrderIds.length"></span> заказов:</p>
+  <div class="mb-4">
+    <template x-if="couriersLoading">
+      <div class="py-2 flex items-center justify-center gap-2">
+        <div class="w-4 h-4 rounded-full border-2 border-primary border-t-transparent animate-spin"></div>
+        <p class="text-xs text-fg-subtle">Загрузка курьеров...</p>
+      </div>
+    </template>
+    <template x-if="!couriersLoading && couriers.length === 0">
+      <p class="text-xs text-fg-subtle py-2 text-center">Нет активных курьеров</p>
+    </template>
+    <template x-if="!couriersLoading && couriers.length > 0">
+      <div class="relative" :class="{'z-30': courierDropdownOpen}">
+        <button @click="toggleCourierDropdown()" type="button" class="w-full px-3 py-2.5 bg-surface2 rounded-lg text-sm text-left flex items-center justify-between text-fg">
+          <span x-text="selectedBulkCourierId ? (couriers.find(c => c.id === selectedBulkCourierId)?.system_name || 'Выберите курьера') : 'Выберите курьера'"></span>
+          <svg class="w-4 h-4 text-fg-muted" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5"/>
+          </svg>
+        </button>
+        <div x-show="courierDropdownOpen"
+             @click.away="courierDropdownOpen = false"
+             class="absolute z-30 w-full mt-1 bg-surface rounded-xl shadow-xl max-h-60 overflow-hidden">
+          <input type="text"
+                 x-model="bulkCourierSearch"
+                 placeholder="Поиск..."
+                 class="w-full px-3 py-2 bg-surface2 border-b border-border text-sm text-fg focus:outline-none focus:border-primary"
+                 @click.stop>
+          <div class="max-h-40 overflow-y-auto">
+            <template x-for="c in filteredBulkCouriers" :key="c.id">
+              <button type="button"
+                      @click="selectedBulkCourierId = c.id; courierDropdownOpen = false"
+                      class="w-full px-3 py-2 text-sm text-left hover:bg-surface2 flex items-center justify-between transition-colors"
+                      :class="selectedBulkCourierId === c.id ? 'bg-surface2 text-primary font-medium' : 'text-fg'">
+                <span x-text="c.system_name"></span>
+                <span x-show="selectedBulkCourierId === c.id" class="text-primary">
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="m4.5 12.75 6 6 9-13.5"/>
+                  </svg>
+                </span>
+              </button>
+            </template>
+            <div x-show="filteredBulkCouriers.length === 0" class="px-3 py-2 text-sm text-fg-muted">Ничего не найдено</div>
+          </div>
+        </div>
+      </div>
+    </template>
+  </div>
+  @component('tma.partials.modal-actions')
+    <button @click="showBulkCourierModal = false" class="flex-1 px-4 py-2.5 bg-surface2 rounded-lg text-sm font-medium">Отмена</button>
+    <button @click="submitBulkAssign()" :disabled="bulkLoading || !selectedBulkCourierId" class="flex-1 px-4 py-2.5 bg-primary text-primary-fg rounded-lg text-sm font-medium disabled:opacity-50">
+      <span x-show="!bulkLoading">Назначить</span>
+      <span x-show="bulkLoading">Сохранение...</span>
+    </button>
+  @endcomponent
+@endcomponent
+@endif
+
+@component('tma.partials.pagination-load-more', [
+  'show' => 'ordersHasMore',
+  'loading' => 'ordersLoading',
+  'hasItems' => 'orders.length > 0',
+  'action' => 'loadOrders()',
+  'scrollTarget' => 'orders-list'
+])
+@endcomponent
+
+  @include('tma.partials.nav')
+@endsection

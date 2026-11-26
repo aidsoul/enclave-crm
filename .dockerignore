@@ -1,0 +1,11 @@
+.env
+.env.local
+**/vendor/
+**/node_modules/
+**/storage/logs/*
+**/storage/framework/cache/*
+**/storage/framework/sessions/*
+**/storage/framework/views/*
+.docker/
+docker-compose.override.yml
+*.log
